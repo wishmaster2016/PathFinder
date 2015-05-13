@@ -4,28 +4,31 @@
   </div>
   <div class="panel-body">
       <div style="margin-top: 10px; margin-bottom: 10px;">
-        <button class="btn btn-default btn-lg btn-block">
+        <button ng-class="{'btn btn-default btn-lg btn-block': options.selectedItem != 'Start',
+                           'btn btn-success btn-lg btn-block': options.selectedItem == 'Start'}"
+                ng-click="changeItem('Start')">
           <span class="glyphicon glyphicon-map-marker"></span>&nbsp;Start
         </button>
       </div>
       <div style="margin-top: 10px; margin-bottom: 10px;">
-        <button class="btn btn-default btn-lg btn-block">
+        <button ng-class="{'btn btn-default btn-lg btn-block': options.selectedItem != 'Finish',
+                           'btn btn-success btn-lg btn-block': options.selectedItem == 'Finish'}"
+                ng-click="changeItem('Finish')">
           <span class="glyphicon glyphicon-flag"></span>&nbsp;Finish
         </button>
       </div>
       <div style="margin-top: 10px; margin-bottom: 10px;">
-        <button class="btn btn-default btn-lg btn-block">
+        <button ng-class="{'btn btn-default btn-lg btn-block': options.selectedItem != 'Wall',
+                           'btn btn-success btn-lg btn-block': options.selectedItem == 'Wall'}"
+                ng-click="changeItem('Wall')">
           <span class="glyphicon glyphicon-ban-circle"></span>&nbsp;Wall
         </button>
       </div>
       <div style="margin-top: 10px; margin-bottom: 10px;">
-        <button class="btn btn-default btn-lg btn-block">
+        <button ng-class="{'btn btn-default btn-lg btn-block': options.selectedItem != 'Empty',
+                           'btn btn-success btn-lg btn-block': options.selectedItem == 'Empty'}"
+                ng-click="changeItem('Empty')">
           <span class="glyphicon glyphicon-unchecked"></span>&nbsp;Empty
-        </button>
-      </div>
-      <div style="margin-top: 10px; margin-bottom: 10px;">
-        <button class="btn btn-default btn-lg btn-block">
-          <span class="glyphicon glyphicon-map-marker"></span>&nbsp;Left hand
         </button>
       </div>
   </div>
@@ -33,25 +36,70 @@
 
 <div class="panel panel-success">
   <div class="panel-heading">
-    <h3 class="panel-title">Choose alghoritm</h3>
+    <h3 class="panel-title">Choose algorithm</h3>
   </div>
   <div class="panel-body">
       <div style="margin-top: 10px; margin-bottom: 10px;">
-        <button class="btn btn-default btn-lg btn-block">
+        <button ng-class="{'btn btn-default btn-lg btn-block': options.selectedAlgorithm != 'Left hand',
+                           'btn btn-success btn-lg btn-block': options.selectedAlgorithm == 'Left hand'}"
+                ng-click="changeAlgorithm('Left hand')">
           <span class="glyphicon glyphicon-hand-left"></span>&nbsp;Left hand
         </button>
       </div>
       <div style="margin-top: 10px; margin-bottom: 10px;">
-        <button class="btn btn-default btn-lg btn-block">
+        <button ng-class="{'btn btn-default btn-lg btn-block': options.selectedAlgorithm != 'Right hand',
+                           'btn btn-success btn-lg btn-block': options.selectedAlgorithm == 'Right hand'}"
+                ng-click="changeAlgorithm('Right hand')">
           <span class="glyphicon glyphicon-hand-right"></span>&nbsp;Right hand
         </button>
       </div>
       <div style="margin-top: 10px; margin-bottom: 10px;">
-        <button class="btn btn-default btn-lg btn-block">
+        <button ng-class="{'btn btn-default btn-lg btn-block': options.selectedAlgorithm != 'Comparsion',
+                           'btn btn-success btn-lg btn-block': options.selectedAlgorithm == 'Comparsion'}"
+                ng-click="changeAlgorithm('Comparsion')">
           <span class="glyphicon glyphicon-stats"></span>&nbsp;Comparsion
         </button>
       </div>
+  </div>
+</div>
 
+<div class="panel panel-success">
+  <div class="panel-heading">
+    <h3 class="panel-title">Current field size is
+      <span class="label label-warning">
+        {{options.selectedSize}}x{{options.selectedSize}}
+      </span>
+    </h3>
+  </div>
+  <div class="panel-body">
+      <div class="dropdown">
+        <button class="btn btn-default btn-lg btn-block"
+                type="button"
+                id="dropdownMenu1"
+                data-toggle="dropdown"
+                aria-expanded="true">
+          <span class="glyphicon glyphicon-fullscreen"></span>&nbsp;Choose size
+          <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" style="max-height: 200px; overflow-y: auto">
+          <li role="presentation" ng-click="setSize(5)"><a role="menuitem" tabindex="-1" href="#">5x5</a></li>
+          <li role="presentation" ng-click="setSize(6)"><a role="menuitem" tabindex="-1" href="#">6x6</a></li>
+          <li role="presentation" ng-click="setSize(7)"><a role="menuitem" tabindex="-1" href="#">7x7</a></li>
+          <li role="presentation" ng-click="setSize(8)"><a role="menuitem" tabindex="-1" href="#">8x8</a></li>
+          <li role="presentation" ng-click="setSize(9)"><a role="menuitem" tabindex="-1" href="#">9x9</a></li>
+          <li role="presentation" ng-click="setSize(10)"><a role="menuitem" tabindex="-1" href="#">10x10</a></li>
+          <li role="presentation" ng-click="setSize(11)"><a role="menuitem" tabindex="-1" href="#">11x11</a></li>
+          <li role="presentation" ng-click="setSize(12)"><a role="menuitem" tabindex="-1" href="#">12x12</a></li>
+          <li role="presentation" ng-click="setSize(13)"><a role="menuitem" tabindex="-1" href="#">13x13</a></li>
+          <li role="presentation" ng-click="setSize(14)"><a role="menuitem" tabindex="-1" href="#">14x14</a></li>
+          <li role="presentation" ng-click="setSize(15)"><a role="menuitem" tabindex="-1" href="#">15x15</a></li>
+          <li role="presentation" ng-click="setSize(16)"><a role="menuitem" tabindex="-1" href="#">16x16</a></li>
+          <li role="presentation" ng-click="setSize(17)"><a role="menuitem" tabindex="-1" href="#">17x17</a></li>
+          <li role="presentation" ng-click="setSize(18)"><a role="menuitem" tabindex="-1" href="#">18x18</a></li>
+          <li role="presentation" ng-click="setSize(19)"><a role="menuitem" tabindex="-1" href="#">19x19</a></li>
+          <li role="presentation" ng-click="setSize(20)"><a role="menuitem" tabindex="-1" href="#">20x20</a></li>
+        </ul>
+      </div>
   </div>
 </div>
 <tjs-model-viewer></tjs-model-viewer>
