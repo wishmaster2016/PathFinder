@@ -3,7 +3,10 @@ angular.module("tjsModelViewer", [])
 		return {
 			restrict: "E",
 			scope: {
-				size: "="
+				selectedItem: "=",
+				realSize: "=",
+				axisSize: "=",
+				isEven: "="
 			},
 			link: function (scope, elem, attr) {
 
@@ -20,9 +23,6 @@ angular.module("tjsModelViewer", [])
 	      var rollOverMesh, rollOverMaterial;
 	      var cubeGeo, cubeMaterial;
 	      var objects = [];
-
-	      var sizeX = 250;
-	      var sizeY = 250;
 	    
 	      function init() {
 	        container = document.createElement( 'div' );
@@ -56,7 +56,7 @@ angular.module("tjsModelViewer", [])
 	        cubeGeo = new THREE.BoxGeometry( 50, 50, 50 );
 	        cubeMaterial = new THREE.MeshBasicMaterial( { color: 0xfeb74c,  map: THREE.ImageUtils.loadTexture( "./assets/images/wall.jpg" ) } );
 
-	        var size = 125, step = 50;
+	        var size = scope.axisSize, step = 50;
 	        var geometry = new THREE.Geometry();
 
 	        for ( var i = - size; i <= size; i += step ) {
@@ -73,7 +73,7 @@ angular.module("tjsModelViewer", [])
 	        raycaster = new THREE.Raycaster();
 	        mouse = new THREE.Vector2();
 
-	        var geometry = new THREE.PlaneBufferGeometry( sizeX, sizeY );
+	        var geometry = new THREE.PlaneBufferGeometry( scope.realSize, scope.realSize );
 	        geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
 	        plane = new THREE.Mesh( geometry );
 	        plane.visible = false;
@@ -116,26 +116,31 @@ angular.module("tjsModelViewer", [])
 	        if ( intersects.length > 0) {
 	          var intersect = intersects[ intersects.length - 1 ];
 	          rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
-	          rollOverMesh.position.divideScalar( 25 ).floor().multiplyScalar( 25 ).addScalar( 25 ).divideScalar( 50 ).floor().multiplyScalar( 50 );
-	          rollOverMesh.position.y += 25;
+	          if(!scope.isEven) {
+	          	rollOverMesh.position.divideScalar( 25 ).floor().multiplyScalar( 25 ).addScalar( 25 ).divideScalar( 50 ).floor().multiplyScalar( 50 );
+	          	rollOverMesh.position.y += 25;
+	          }
+	          else if(scope.isEven) {
+	          	rollOverMesh.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+	          }
 
-	          for(var i = -sizeX / 2 + 25; i <= sizeX / 2 - 25; i+= 50) {
+	          /*for(var i = -sizeX / 2 + 25; i <= sizeX / 2 - 25; i+= 50) {
 	            if(rollOverMesh.position.x == i) {
-								/*var span3 = document.getElementById("ipos");
-	              span3.textContent = counterX;*/
+								var span3 = document.getElementById("ipos");
+	              span3.textContent = counterX;
 	              break;
 	            }
-	            //counterX++;
+	            counterX++;
 	          }
 
 	          for(var i = -sizeY / 2 + 25; i <= sizeY / 2 - 25; i+= 50) {
 	            if(rollOverMesh.position.z == i) {
-	              /*var span4 = document.getElementById("jpos");
-	              span4.textContent = counterY;*/
+	              var span4 = document.getElementById("jpos");
+	              span4.textContent = counterY;
 	              break;
 	            }
-	            //counterY++;
-	          }
+	            counterY++;
+	          }*/
 	        }
 	        render();
 	      }
@@ -148,14 +153,14 @@ angular.module("tjsModelViewer", [])
 	        var intersects = raycaster.intersectObjects( objects );
 	        if ( intersects.length > 0) {
 	          var intersect = intersects[ 0 ];
-	          if ( isShiftDown ) {
+	          if (scope.selectedItem == "Empty") {
 	            if ( intersect.object != plane ) {
 	              scene.remove( intersect.object );
 	              objects.splice( objects.indexOf( intersect.object ), 1 );
 	            }
 	          }
 
-	          else if( isCtrlDown ) {
+	          else if(scope.selectedItem == "Start") {
 	            var jsonLoader = new THREE.JSONLoader();
 	            jsonLoader.load("./assets/models/android-animations.js", function(geometry, materials) {
 	              for(var i = 0; i < materials.length; i++) {
@@ -166,19 +171,33 @@ angular.module("tjsModelViewer", [])
 	              mesh.rotation.y = 2 * Math.PI;
 	              mesh.scale.set(5, 5, 5);
 	              mesh.position.copy( intersect.point ).add( intersect.face.normal );
-	              mesh.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+	              //mesh.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+	              if(!scope.isEven) {
+	          			mesh.position.divideScalar( 25 ).floor().multiplyScalar( 25 ).addScalar( 25 ).divideScalar( 50 ).floor().multiplyScalar( 50 );
+	          			mesh.position.y += 25;
+			          }
+			          else if(scope.isEven) {
+			          	mesh.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+			          }
 	              mesh.position.y = 0;
 	              scene.add( mesh );
 	              objects.push( mesh );
 	            });
 	          }
-	          else {
+	          else if(scope.selectedItem == "Wall") {
 	            if(intersects.length > 1) {
 	              intersect = intersects[intersects.length - 1]
 	            }
 	            var voxel = new THREE.Mesh( cubeGeo, cubeMaterial );
 	            voxel.position.copy( intersect.point ).add( intersect.face.normal );
-	            voxel.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+	            //voxel.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+	            if(!scope.isEven) {
+	          		voxel.position.divideScalar( 25 ).floor().multiplyScalar( 25 ).addScalar( 25 ).divideScalar( 50 ).floor().multiplyScalar( 50 );
+	          		voxel.position.y += 25;
+		          }
+		          else if(scope.isEven) {
+		          	voxel.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+		          }
 	            scene.add( voxel );
 	            objects.push( voxel );
 	          }
