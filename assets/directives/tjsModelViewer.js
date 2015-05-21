@@ -6,36 +6,89 @@ angular.module("tjsModelViewer", [])
 				selectedItem: "=",
 				realSize: "=",
 				axisSize: "=",
-				isEven: "="
+				isEven: "=",
+				robotWay: "="
 			},
 			link: function (scope, elem, attr) {
-
-				scope.$watch("size", function(newValue, oldValue) {
-					if (newValue != oldValue) loadModel(newValue);
-				});
-
 				if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-
-	      var container;
-	      var camera, scene, renderer;
-	      var plane, cube;
-	      var mouse, raycaster, controls, model, isShiftDown = false, isCtrlDown = false;
-	      var rollOverMesh, rollOverMaterial;
-	      var cubeGeo, cubeMaterial;
+				var container = undefined;
+	      var camera = undefined;
+	      var scene = undefined;
+	      var renderer = undefined;
+	      var plane = undefined;
+	      var cube = undefined;
+	      var mouse = undefined;
+	      var raycaster = undefined;
+	      var controls = undefined;
+	      var model = undefined;
+	      var rollOverMesh = undefined;
+	      var rollOverMaterial = undefined;
+	      var finishGeo = undefined;
+	      var cubeGeo = undefined;
+	      var cubeMaterial = undefined;
+	      var finishMaterial = undefined;
 	      var objects = [];
-	    
-	      function init() {
+	      var isFirst = true;
+	      var android = undefined;
+	      var timeAndroid = 1;
+
+	      document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+		    document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+		    window.addEventListener( 'resize', onWindowResize, false );
+
+      	var moveBot = function(path, place) {
+	      	var itemSize = 25;
+	        var tl = new TimelineLite();//,
+	            //targetPlace = { x: place.x, y: place.y, z: place.z };
+	        tl.clear();
+	        for(var i = 0; i < path.length; i++) {
+	          var target0 = { x: path[i].x, y: path[i].y, z: path[i].z };
+	          tl.add(TweenLite.to(android.position, timeAndroid, target0));
+	          /*var target1 = { x: path[i].x, y: path[i].y + itemSize, z: path[i].z };
+	          tl.add(TweenLite.to(path[i], timeAndroid, target1));
+	          tl.add(TweenLite.to([ android.position, path[i].position, path[i].label.position ], timeAndroid, targetPlace));*/
+	        }
+	        tl.delay(0);
+	        tl.play();
+	      };
+
+
+	      scope.$watch("robotWay", function(newValue, oldValue) {
+	      	if(newValue != undefined && newValue.way && newValue.way.length > 0) {
+	      		moveBot(scope.robotWay.way, scope.robotWay.point);
+	      	}
+	      });
+
+				scope.$watch("realSize", function(newValue, oldValue) {
+					if(!isFirst) {
+		      	container.removeChild( renderer.domElement );
+		      	container.remove();
+		      }
+					container = undefined;
+		      camera = undefined;
+		      scene = undefined;
+		      renderer = undefined;
+		      plane = undefined;
+		      cube = undefined;
+		      mouse = undefined;
+		      raycaster = undefined;
+		      controls = undefined;
+		      model = undefined;
+		      rollOverMesh = undefined;
+		      rollOverMaterial = undefined;
+		      cubeGeo = undefined;
+		      finishGeo = undefined;
+		      cubeMaterial = undefined;
+		      finishMaterial = undefined;
+		      objects = [];
+		      anroid = undefined;
+		      init();
+		      animate();
+		      isFirst = false;
+				});
+				function init() {
 	        container = document.createElement( 'div' );
 	        document.body.appendChild( container );
-
-	        /*var info = document.createElement( 'div' );
-	        info.style.position = 'absolute';
-	        info.style.top = '10px';
-	        info.style.width = '100%';
-	        info.style.textAlign = 'center';
-	        info.innerHTML = '<a href="http://threejs.org" target="_blank">three.js</a> - voxel painter - webgl<br><strong>click</strong>: add voxel, <strong>shift + click</strong>: remove voxel';
-	        container.appendChild( info );*/
-
 
 	        scene = new THREE.Scene();
 	        camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
@@ -54,7 +107,9 @@ angular.module("tjsModelViewer", [])
 	        scene.add( rollOverMesh );
 
 	        cubeGeo = new THREE.BoxGeometry( 50, 50, 50 );
+	        finishGeo = new THREE.BoxGeometry( 50, 1, 50 );
 	        cubeMaterial = new THREE.MeshBasicMaterial( { color: 0xfeb74c,  map: THREE.ImageUtils.loadTexture( "./assets/images/wall.jpg" ) } );
+	        finishMaterial = new THREE.MeshBasicMaterial( { color: 0x399C24 } );
 
 	        var size = scope.axisSize, step = 50;
 	        var geometry = new THREE.Geometry();
@@ -92,12 +147,6 @@ angular.module("tjsModelViewer", [])
 	        controls.noPan = false;
 	        controls.staticMoving = false;
 	        controls.keys = [ 65, 83, 68 ];
-
-	        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-	        document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-	        document.addEventListener( 'keydown', onDocumentKeyDown, false );
-	        document.addEventListener( 'keyup', onDocumentKeyUp, false );
-	        window.addEventListener( 'resize', onWindowResize, false );
 	      }
 
 	      function onWindowResize() {
@@ -123,24 +172,6 @@ angular.module("tjsModelViewer", [])
 	          else if(scope.isEven) {
 	          	rollOverMesh.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
 	          }
-
-	          /*for(var i = -sizeX / 2 + 25; i <= sizeX / 2 - 25; i+= 50) {
-	            if(rollOverMesh.position.x == i) {
-								var span3 = document.getElementById("ipos");
-	              span3.textContent = counterX;
-	              break;
-	            }
-	            counterX++;
-	          }
-
-	          for(var i = -sizeY / 2 + 25; i <= sizeY / 2 - 25; i+= 50) {
-	            if(rollOverMesh.position.z == i) {
-	              var span4 = document.getElementById("jpos");
-	              span4.textContent = counterY;
-	              break;
-	            }
-	            counterY++;
-	          }*/
 	        }
 	        render();
 	      }
@@ -149,17 +180,31 @@ angular.module("tjsModelViewer", [])
 	        event.preventDefault();
 	        mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
 	        raycaster.setFromCamera( mouse, camera );
-
+	        var counterX = 0;
+	        var counterY = 0;
 	        var intersects = raycaster.intersectObjects( objects );
 	        if ( intersects.length > 0) {
 	          var intersect = intersects[ 0 ];
 	          if (scope.selectedItem == "Empty") {
 	            if ( intersect.object != plane ) {
+		            for(var i = -scope.realSize / 2 + 25; i <= scope.realSize / 2 - 25; i+= 50) {
+			            if(intersect.object.position.x == i) {
+			              break;
+			            }
+			            counterX++;
+			          }
+			          for(var i = -scope.realSize / 2 + 25; i <= scope.realSize / 2 - 25; i+= 50) {
+			            if(intersect.object.position.z == i) {
+			              break;
+			            }
+			            counterY++;
+			          }
+			          console.log('x: ', counterX, ', y: ', counterY);
+			          scope.$parent.playfieldMouseClick(counterX + 1, counterY + 1);
 	              scene.remove( intersect.object );
 	              objects.splice( objects.indexOf( intersect.object ), 1 );
 	            }
 	          }
-
 	          else if(scope.selectedItem == "Start") {
 	            var jsonLoader = new THREE.JSONLoader();
 	            jsonLoader.load("./assets/models/android-animations.js", function(geometry, materials) {
@@ -179,9 +224,25 @@ angular.module("tjsModelViewer", [])
 			          else if(scope.isEven) {
 			          	mesh.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
 			          }
-	              mesh.position.y = 0;
-	              scene.add( mesh );
-	              objects.push( mesh );
+	              for(var i = -scope.realSize / 2 + 25; i <= scope.realSize / 2 - 25; i+= 50) {
+			            if(mesh.position.x == i) {
+			              break;
+			            }
+			            counterX++;
+			          }
+			          for(var i = -scope.realSize / 2 + 25; i <= scope.realSize / 2 - 25; i+= 50) {
+			            if(mesh.position.z == i) {
+			              break;
+			            }
+			            counterY++;
+			          }
+			          console.log('x: ', counterX, ', y: ', counterY);
+			          if(scope.$parent.playfieldMouseClick(counterX + 1, counterY + 1)) {
+			          	mesh.position.y = 0;
+		              android = mesh;
+		              scene.add( mesh );
+		              objects.push( mesh );
+			          }
 	            });
 	          }
 	          else if(scope.selectedItem == "Wall") {
@@ -198,24 +259,62 @@ angular.module("tjsModelViewer", [])
 		          else if(scope.isEven) {
 		          	voxel.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
 		          }
-	            scene.add( voxel );
-	            objects.push( voxel );
+
+
+	            for(var i = -scope.realSize / 2 + 25; i <= scope.realSize / 2 - 25; i+= 50) {
+		            if(voxel.position.x == i) {
+		              break;
+		            }
+		            counterX++;
+		          }
+		          for(var i = -scope.realSize / 2 + 25; i <= scope.realSize / 2 - 25; i+= 50) {
+		            if(voxel.position.z == i) {
+		              break;
+		            }
+		            counterY++;
+		          }
+		          console.log('x: ', counterX, ', y: ', counterY);
+		          if(scope.$parent.playfieldMouseClick(counterX + 1, counterY + 1)) {
+		          	scene.add( voxel );
+	            	objects.push( voxel );
+		          }
 	          }
+	          else if(scope.selectedItem == "Finish") {
+	            if(intersects.length > 1) {
+	              intersect = intersects[intersects.length - 1]
+	            }
+	            var voxel = new THREE.Mesh( finishGeo, finishMaterial );
+	            voxel.position.copy( intersect.point ).add( intersect.face.normal );
+	            //voxel.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+	            if(!scope.isEven) {
+	          		voxel.position.divideScalar( 25 ).floor().multiplyScalar( 25 ).addScalar( 25 ).divideScalar( 50 ).floor().multiplyScalar( 50 );
+	          		voxel.position.y = 0;
+		          }
+		          else if(scope.isEven) {
+		          	voxel.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+		          	voxel.position.y = 0;
+		          }
+
+	            for(var i = -scope.realSize / 2 + 25; i <= scope.realSize / 2 - 25; i+= 50) {
+		            if(voxel.position.x == i) {
+		              break;
+		            }
+		            counterX++;
+		          }
+		          for(var i = -scope.realSize / 2 + 25; i <= scope.realSize / 2 - 25; i+= 50) {
+		            if(voxel.position.z == i) {
+		              break;
+		            }
+		            counterY++;
+		          }
+		          console.log('x: ', counterX, ', y: ', counterY);
+		          if(scope.$parent.playfieldMouseClick(counterX + 1, counterY + 1)) {
+		          	scene.add( voxel );
+	            	objects.push( voxel );
+		          }
+	          }
+
 	          render();
-	        }
-	      }
-
-	      function onDocumentKeyDown( event ) {
-	        switch( event.keyCode ) {
-	          case 16: isShiftDown = true; break;
-	          case 17: isCtrlDown = true; break;
-	        }
-	      }
-
-	      function onDocumentKeyUp( event ) {
-	        switch ( event.keyCode ) {
-	          case 16: isShiftDown = false; break;
-	          case 17: isCtrlDown = false; break;
 	        }
 	      }
 
@@ -228,9 +327,6 @@ angular.module("tjsModelViewer", [])
 	        controls.update();
 	        renderer.render( scene, camera );
 	      };
-
-	      init();
-	      animate();
 			}
 		}
 	}]);
