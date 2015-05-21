@@ -7,7 +7,9 @@ angular.module("tjsModelViewer", [])
 				realSize: "=",
 				axisSize: "=",
 				isEven: "=",
-				robotWay: "="
+				robotWay: "=",
+				isAnotherAlgo: "=",
+				isClearBoard: "="
 			},
 			link: function (scope, elem, attr) {
 				if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
@@ -39,18 +41,29 @@ angular.module("tjsModelViewer", [])
       	var moveBot = function(path, place) {
 	      	var itemSize = 25;
 	        var tl = new TimelineLite();//,
-	            //targetPlace = { x: place.x, y: place.y, z: place.z };
 	        tl.clear();
 	        for(var i = 0; i < path.length; i++) {
 	          var target0 = { x: path[i].x, y: path[i].y, z: path[i].z };
 	          tl.add(TweenLite.to(android.position, timeAndroid, target0));
-	          /*var target1 = { x: path[i].x, y: path[i].y + itemSize, z: path[i].z };
-	          tl.add(TweenLite.to(path[i], timeAndroid, target1));
-	          tl.add(TweenLite.to([ android.position, path[i].position, path[i].label.position ], timeAndroid, targetPlace));*/
 	        }
 	        tl.delay(0);
 	        tl.play();
 	      };
+
+	      scope.$watch("isAnotherAlgo", function(newValue, oldValue) {
+	      	if(newValue != undefined && newValue) {
+	      		
+	      	}
+	      });
+
+	      scope.$watch("isClearBoard", function(newValue, oldValue) {
+	      	if(newValue != undefined && newValue) {
+	      		for(var i = 1; i < objects.length; i++) {
+	      			scene.remove(objects[i]);
+	      		}
+	      		scope.$parent.isClearBoard = true;
+	      	}
+	      });
 
 
 	      scope.$watch("robotWay", function(newValue, oldValue) {
@@ -62,7 +75,7 @@ angular.module("tjsModelViewer", [])
 				scope.$watch("realSize", function(newValue, oldValue) {
 					if(!isFirst) {
 		      	container.removeChild( renderer.domElement );
-		      	container.remove();
+		      	//container.remove();
 		      }
 					container = undefined;
 		      camera = undefined;

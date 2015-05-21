@@ -1,4 +1,34 @@
-<div class="panel panel-success">
+<div class="panel panel-success" ng-show="isAlgorithm">
+  <div class="panel-heading">
+    <h3 class="panel-title">Results</h3>
+  </div>
+  <div class="panel-body">
+      <div style="margin-top: 10px; margin-bottom: 10px;">
+        <h6>Choosed algorithm:
+          <span></span>&nbsp;{{options.selectedAlgorithm}}
+        </h6>
+      </div>
+      <div style="margin-top: 10px; margin-bottom: 10px;">
+        <h6>Way:
+          <span></span>&nbsp;{{wayLength}}
+        </h6>
+      </div>
+      <div style="margin-top: 10px; margin-bottom: 10px;">
+         <button class="btn btn-default btn-lg btn-block"
+                ng-click="anotherAlgorithm()">
+          <span class="glyphicon glyphicon-repeat"></span>&nbsp;Try another algorithm
+        </button>
+      </div>
+      <div style="margin-top: 10px; margin-bottom: 10px;">
+        <button class="btn btn-default btn-lg btn-block"
+                ng-click="clearBoard()">
+          <span class="glyphicon glyphicon-remove"></span>&nbsp;Clear board
+        </button>
+      </div>
+  </div>
+</div>
+
+<div class="panel panel-success" ng-show="!isAlgorithm">
   <div class="panel-heading">
     <h3 class="panel-title">Choose elements for placing</h3>
   </div>
@@ -34,7 +64,7 @@
   </div>
 </div>
 
-<div class="panel panel-success">
+<div class="panel panel-success" ng-show="!isAlgorithm">
   <div class="panel-heading">
     <h3 class="panel-title">Choose algorithm</h3>
   </div>
@@ -63,7 +93,7 @@
   </div>
 </div>
 
-<div class="panel panel-success">
+<div class="panel panel-success" ng-show="!isAlgorithm">
   <div class="panel-heading">
     <h3 class="panel-title">Current field size is
       <span class="label label-warning">
@@ -106,6 +136,7 @@
                   real-size="options.realSize"
                   axis-size="options.axisSize"
                   is-even="options.isEven"
-                  robot-way="robotWay">
+                  robot-way="robotWay"
+                  is-another-algo="isAnotherAlgo"
+                  is-clear-board="isClearBoard">
 </tjs-model-viewer>
-{{options}}

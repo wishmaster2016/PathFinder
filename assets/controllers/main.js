@@ -13,6 +13,25 @@ angular.module('aiPathFinder')
     $scope.playfield = [];
     $scope.robotWay = [];
 
+    $scope.startFinishPos = {
+      start: {
+        x: undefined,
+        y: undefined
+      },
+      finish: {
+        x: undefined,
+        y: undefined
+      }
+    }
+
+    $scope.isAnotherAlgo = false;
+    $scope.isClearBoard = false;
+
+    $scope.wayLength = 0;
+
+    $scope.isAlgorithm = false;
+    $scope.isComparsion = false;
+
 		var initializePlayfield = function() {
       $scope.playfield = [];
 			var buf = [];
@@ -47,14 +66,6 @@ angular.module('aiPathFinder')
 			else {
 				$scope.options.selectedItem = item;
 			}
-
-      //FOR TEST!!!
-      /*if(item == "Finish") {
-        $scope.playfield[5][1] = 3;
-        B.x = 5;
-        B.y = 1;
-      }*/
-      //END TEST!!!
 		};
 
 		$scope.changeAlgorithm = function(item) {
@@ -69,11 +80,17 @@ angular.module('aiPathFinder')
 
 		$scope.setSize = function(item) {
 			$scope.options.selectedSize = item;
-			$scope.options.realSize = item * 50;
-			$scope.options.axisSize = $scope.options.realSize / 2;
+			//$scope.options.realSize = item * 50;
+      var bufReal = item * 50;
+			$scope.options.axisSize = bufReal / 2;
 			$scope.options.isEven = isEven($scope.options.axisSize);
+      $scope.options.realSize = bufReal;
 			initializePlayfield();
 		};
+
+    var isFirst = true;
+    var isStartExist = false;
+    var isFinishExists = false;
 
 		var isEven = function(n) {
 			return !(n & 1);
@@ -91,17 +108,17 @@ angular.module('aiPathFinder')
     var W = {
         x: null,
         y: null
-    }
+    };
     var P = {
       x: null,
       y: null
-    }
+    };
     var D = {
       x: null,
       y: null
-    }
+    };
 
-    var straight = []
+    var straight = [];
 
 		$scope.playfieldMouseClick = function(_x, _y) {
 			if($scope.options.selectedItem == "Wall") {
@@ -116,13 +133,24 @@ angular.module('aiPathFinder')
 
 			}
 			else if($scope.options.selectedItem == "Empty") {
+        if($scope.playfield[_x][_y] == 2) {
+          isStartExist = false;
+        }
+        if($scope.playfield[_x][_y] == 3) {
+          isFinishExists = false;
+        } 
 				$scope.playfield[_x][_y] = 0;
+        return true;
 			}
-			else if($scope.options.selectedItem == "Start") {
-        if($scope.playfield[_x][_y] == 0) {
+			else if($scope.options.selectedItem == "Start" && !isStartExist) {
+        if($scope.playfield[_x][_y] == 0) {          
+          $scope.startFinishPos.start.x = _x;
+          $scope.startFinishPos.start.y = _y;
+
   				$scope.playfield[_x][_y] = 2;
   				A.x = _x;
   				A.y= _y;
+          isStartExist = true;
           return true;
         }
         else {
@@ -130,11 +158,15 @@ angular.module('aiPathFinder')
           return false;
         }
 			}
-			else if($scope.options.selectedItem == "Finish") {
+			else if($scope.options.selectedItem == "Finish" && !isFinishExists) {
         if($scope.playfield[_x][_y] == 0) {
+          $scope.startFinishPos.finish.x = _x;
+          $scope.startFinishPos.finish.y = _y;
+
   				$scope.playfield[_x][_y] = 3;
   				B.x = _x;
   				B.y= _y;
+          isFinishExists = true;
           return true;
         }
         else {
@@ -366,6 +398,9 @@ angular.module('aiPathFinder')
         y: 0
       };
       do {
+        if(iterations == 14) {
+          var bbbbb = 99;
+        }
         //Определяем, куда пойдем
         var x1 = 0;
         var x2 = 0;
@@ -422,7 +457,7 @@ angular.module('aiPathFinder')
         if (P.x == B.x && P.y == B.y) {
           myway.push(P);
           flag = false;
-          return EndOfFind(); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          return EndOfFind(myway); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         }
         //if (!AreNeighs(myway[myway.Count - 1], myway[myway.Count - 2]) && AreNeighs(myway[myway.Count - 1], deleted))
             //myway[myway.Count - 2] = deleted;
@@ -445,7 +480,7 @@ angular.module('aiPathFinder')
           if (myway[myway.length - 1].x == B.x && myway[myway.length - 1].y == B.y) {
             myway.push(B);
             flag = false;
-            return EndOfFind(); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            return EndOfFind(myway); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           }
           
           /*Еще одна фича против зацикливания
@@ -623,14 +658,47 @@ angular.module('aiPathFinder')
     };
 
     $scope.startLeftHand = function() {
+      $scope.isAlgorithm = true;
+      if(isFirst) {
+        isFirst = false;
+      }
+      else {
+        straight = [];
+        W = {
+          x: null,
+          y: null
+        };
+        P = {
+          x: null,
+          y: null
+        };
+        D = {
+          x: null,
+          y: null
+        };
+        var buf = $scope.options.selectedItem;
+        $scope.options.selectedItem = "Start";
+        $scope.playfieldMouseClick($scope.startFinishPos.start.x, $scope.startFinishPos.start.y);
+        $scope.options.selectedItem = "Finish";
+        $scope.playfieldMouseClick($scope.startFinishPos.finish.x, $scope.startFinishPos.finish.y);
+        $scope.options.selectedItem = buf;
+      }
       straightWay();
       PWD();
       var result = findWay(true);
+
+      $scope.wayLength = result.length;
+
+      if((result.way[result.way.length - 1].x == $scope.startFinishPos.start.x) && 
+         (result.way[result.way.length - 1].y == $scope.startFinishPos.start.y)) {
+        result.way.reverse();
+      }
+
       if(result == 0) {
         alert("Way insn't exists!!!");
         return;
       }
-      var b = 7;
+      //var b = 7;
       var bufWay = [];
       for(var i = 0; i < result.way.length; i++) {
         bufWay.push({
@@ -650,14 +718,47 @@ angular.module('aiPathFinder')
     };
 
     $scope.startRightHand = function() {
+      $scope.isAlgorithm = true;
+      if(isFirst) {
+        isFirst = false;
+      }
+      else {
+        straight = [];
+        W = {
+          x: null,
+          y: null
+        };
+        P = {
+          x: null,
+          y: null
+        };
+        D = {
+          x: null,
+          y: null
+        };
+        var buf = $scope.options.selectedItem;
+        $scope.options.selectedItem = "Start";
+        $scope.playfieldMouseClick($scope.startFinishPos.start.x, $scope.startFinishPos.start.y);
+        $scope.options.selectedItem = "Finish";
+        $scope.playfieldMouseClick($scope.startFinishPos.finish.x, $scope.startFinishPos.finish.y);
+        $scope.options.selectedItem = buf;
+      }
       straightWay();
       PWD();
       var result = findWay(false);
+
+      $scope.wayLength = result.length;
+
+      if((result.way[result.way.length - 1].x == $scope.startFinishPos.start.x) && 
+         (result.way[result.way.length - 1].y == $scope.startFinishPos.start.y)) {
+        result.way.reverse();
+      }
+
       if(result == 0) {
         alert("Way insn't exists!!!");
         return;
       }
-      var b = 7;
+      //var b = 7;
       var bufWay = [];
       for(var i = 0; i < result.way.length; i++) {
         bufWay.push({
@@ -691,6 +792,20 @@ angular.module('aiPathFinder')
       }
       return startField;
     }
+
+    $scope.anotherAlgorithm = function() {
+      $scope.isAlgorithm = false;
+
+    };
+
+    $scope.clearBoard = function() {
+      $scope.isAlgorithm = false;
+      $scope.isClearBoard = true;
+      //$scope.isClearBoard = false;
+      isStartExist = false;
+      isFinishExists = false;
+      $scope.setSize($scope.options.selectedSize);
+    };
   });
 
 
