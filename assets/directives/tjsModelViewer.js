@@ -8,7 +8,7 @@ angular.module("tjsModelViewer", [])
 				axisSize: "=",
 				isEven: "=",
 				robotWay: "=",
-				isAnotherAlgo: "=",
+				anotherAlgoPos: "=",
 				isClearBoard: "="
 			},
 			link: function (scope, elem, attr) {
@@ -50,9 +50,10 @@ angular.module("tjsModelViewer", [])
 	        tl.play();
 	      };
 
-	      scope.$watch("isAnotherAlgo", function(newValue, oldValue) {
-	      	if(newValue != undefined && newValue) {
-	      		
+	      scope.$watch("anotherAlgoPos", function(newValue, oldValue) {
+	      	if(newValue.x != undefined && newValue.y != undefined) {
+	      		android.position.x = newValue.x;
+	      		android.position.z = newValue.y;
 	      	}
 	      });
 

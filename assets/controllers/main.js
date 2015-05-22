@@ -13,6 +13,11 @@ angular.module('aiPathFinder')
     $scope.playfield = [];
     $scope.robotWay = [];
 
+    $scope.comparsionData = {
+      left: undefined,
+      right: undefined
+    }
+
     $scope.startFinishPos = {
       start: {
         x: undefined,
@@ -24,11 +29,13 @@ angular.module('aiPathFinder')
       }
     }
 
+    $scope.anotherAlgoPos = {
+      x: undefined,
+      y: undefined
+    }
     $scope.isAnotherAlgo = false;
     $scope.isClearBoard = false;
-
     $scope.wayLength = 0;
-
     $scope.isAlgorithm = false;
     $scope.isComparsion = false;
 
@@ -75,6 +82,9 @@ angular.module('aiPathFinder')
       }
       else if(item == "Right hand") {
         $scope.startRightHand();
+      }
+      else if(item == "Comparsion") {
+        $scope.startComparsion();
       }
 		};
 
@@ -398,9 +408,6 @@ angular.module('aiPathFinder')
         y: 0
       };
       do {
-        if(iterations == 14) {
-          var bbbbb = 99;
-        }
         //Определяем, куда пойдем
         var x1 = 0;
         var x2 = 0;
@@ -658,6 +665,8 @@ angular.module('aiPathFinder')
     };
 
     $scope.startLeftHand = function() {
+      $scope.isComparsion = false;
+      $scope.isClearBoard = false;
       $scope.isAlgorithm = true;
       if(isFirst) {
         isFirst = false;
@@ -718,6 +727,8 @@ angular.module('aiPathFinder')
     };
 
     $scope.startRightHand = function() {
+      $scope.isComparsion = false;
+      $scope.isClearBoard = false;
       $scope.isAlgorithm = true;
       if(isFirst) {
         isFirst = false;
@@ -777,12 +788,110 @@ angular.module('aiPathFinder')
       };
     };
 
-    var toRealCoord = function(num) {
-      var startField = -($scope.options.axisSize - 25);
-      for(var i = 1; i < num; i++) {
-        startField += 50 ;
+    $scope.startComparsion = function() {
+      $scope.isComparsion = true;
+      $scope.isClearBoard = false;
+      $scope.isAlgorithm = true;
+      if(isFirst) {
+        isFirst = false;
       }
-      return startField;
+      else {
+        straight = [];
+        W = {
+          x: null,
+          y: null
+        };
+        P = {
+          x: null,
+          y: null
+        };
+        D = {
+          x: null,
+          y: null
+        };
+        var buf = $scope.options.selectedItem;
+        $scope.options.selectedItem = "Start";
+        $scope.playfieldMouseClick($scope.startFinishPos.start.x, $scope.startFinishPos.start.y);
+        $scope.options.selectedItem = "Finish";
+        $scope.playfieldMouseClick($scope.startFinishPos.finish.x, $scope.startFinishPos.finish.y);
+        $scope.options.selectedItem = buf;
+      }
+      straightWay();
+      PWD();
+      var resultRight = findWay(false);
+
+      straight = [];
+      W = {
+        x: null,
+        y: null
+      };
+      P = {
+        x: null,
+        y: null
+      };
+      D = {
+        x: null,
+        y: null
+      };
+
+      straightWay();
+      PWD();
+      var resultLeft = findWay(true);
+      var result;
+
+       $scope.comparsionData = {
+          left: resultLeft.length,
+          right: resultRight.length
+       }
+
+      if(resultLeft == 0) {
+        alert("Way insn't exists!!!");
+        return;
+      }
+      if(resultRight == 0) {
+        alert("Way insn't exists!!!");
+        return;
+      }
+
+
+      if(resultLeft.length < resultRight.length) {
+        $scope.wayLength = resultLeft.length;
+        $scope.options.selectedAlgorithm = "Left hand";
+        result = resultLeft;
+      }
+      else if(resultLeft.length > resultRight.length) {
+        $scope.wayLength = resultRight.length;
+        $scope.options.selectedAlgorithm = "Right hand";
+        result = resultRight;
+      }
+      else {
+        $scope.wayLength = resultLeft.length;
+        $scope.options.selectedAlgorithm = "Algorhitms have the same way length";
+        result = resultLeft;
+      }
+
+      if((result.way[result.way.length - 1].x == $scope.startFinishPos.start.x) && 
+         (result.way[result.way.length - 1].y == $scope.startFinishPos.start.y)) {
+        result.way.reverse();
+      }
+
+      
+      var bufWay = [];
+      for(var i = 0; i < result.way.length; i++) {
+        bufWay.push({
+          x: toRealCoord(result.way[i].x),
+          z: toRealCoord(result.way[i].y),
+          y: 0
+        });
+      }
+      $scope.robotWay = {
+        point: {
+          x: toRealCoord(result.way[result.way.length - 1].x),
+          z: toRealCoord(result.way[result.way.length - 1].y),
+          y: 0
+        },
+        way: bufWay
+      };
     };
 
     var toRealCoord = function(num) {
@@ -791,17 +900,19 @@ angular.module('aiPathFinder')
         startField += 50 ;
       }
       return startField;
-    }
+    };
 
     $scope.anotherAlgorithm = function() {
       $scope.isAlgorithm = false;
-
+      $scope.anotherAlgoPos = {
+        x: toRealCoord($scope.startFinishPos.start.x),
+        y: toRealCoord($scope.startFinishPos.start.y)
+      }
     };
 
     $scope.clearBoard = function() {
       $scope.isAlgorithm = false;
       $scope.isClearBoard = true;
-      //$scope.isClearBoard = false;
       isStartExist = false;
       isFinishExists = false;
       $scope.setSize($scope.options.selectedSize);
