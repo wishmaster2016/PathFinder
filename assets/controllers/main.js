@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('aiPathFinder')
-	.controller('MainCtrl', function ($scope) {
+	.controller('MainCtrl', [ '$scope', 'toaster', function ($scope, toaster) {
 		$scope.options = {
 			selectedItem: "Start",
 			selectedSize: 5,
@@ -78,17 +78,35 @@ angular.module('aiPathFinder')
 		$scope.changeAlgorithm = function(item) {
 			$scope.options.selectedAlgorithm = item;
       if(item == "Left hand") {
+        if(!isStartExist || !isFinishExists) {
+          toaster.pop('error', 'Error', 'Set start and finish positions');
+          return;
+        }
         $scope.startLeftHand();
       }
       else if(item == "Right hand") {
+        if(!isStartExist || !isFinishExists) {
+          toaster.pop('error', 'Error', 'Set start and finish positions');
+          return;
+        }
         $scope.startRightHand();
       }
       else if(item == "Comparsion") {
+        if(!isStartExist || !isFinishExists) {
+          toaster.pop('error', 'Error', 'Set start and finish positions');
+          return;
+        }
         $scope.startComparsion();
       }
 		};
 
+    var isFirst = true;
+    var isStartExist = false;
+    var isFinishExists = false;
+
 		$scope.setSize = function(item) {
+      isStartExist = false;
+      isFinishExists = false;
 			$scope.options.selectedSize = item;
 			//$scope.options.realSize = item * 50;
       var bufReal = item * 50;
@@ -96,11 +114,9 @@ angular.module('aiPathFinder')
 			$scope.options.isEven = isEven($scope.options.axisSize);
       $scope.options.realSize = bufReal;
 			initializePlayfield();
+      $scope.isClearBoard = false;
+      $scope.clearBoard();
 		};
-
-    var isFirst = true;
-    var isStartExist = false;
-    var isFinishExists = false;
 
 		var isEven = function(n) {
 			return !(n & 1);
@@ -130,6 +146,10 @@ angular.module('aiPathFinder')
 
     var straight = [];
 
+    var popToaster = function() {
+       toaster.pop('error', 'Error', 'Place element only on empty position');
+    }
+
 		$scope.playfieldMouseClick = function(_x, _y) {
 			if($scope.options.selectedItem == "Wall") {
         if($scope.playfield[_x][_y] == 0) {
@@ -137,7 +157,8 @@ angular.module('aiPathFinder')
           return true;
         }
         else {
-          alert("Error! Place element only on empty position!");
+          //alert("Error! Place element only on empty position!");
+          //toaster.pop('error', 'Error', 'Place element only on empty position');
           return false;
         }
 
@@ -164,7 +185,8 @@ angular.module('aiPathFinder')
           return true;
         }
         else {
-          alert("Error! Place element only on empty position!");
+          //alert("Error! Place element only on empty position!");
+          //toaster.pop('error', 'Error', 'Place element only on empty position');
           return false;
         }
 			}
@@ -180,7 +202,8 @@ angular.module('aiPathFinder')
           return true;
         }
         else {
-          alert("Error! Place element only on empty position!");
+          //alert("Error! Place element only on empty position!");
+          //toaster.pop('error', 'Error', 'Place element only on empty position');
           return false;
         }
 			}
@@ -196,11 +219,8 @@ angular.module('aiPathFinder')
     };
 
 		var straightWay = function() {
-      //Определяем пути "напрямик"
-      //straight = new List<Point>();
-      //Вначале выводим уравнение прямой
       var k, b;
-      if (A.x == B.x) // Если прямая параллельна оси Oy
+      if (A.x == B.x)
       {
         if (A.y < B.y) {
         	for (var i = A.y; i <= B.y; i++) {
@@ -228,9 +248,6 @@ angular.module('aiPathFinder')
 
       var dx = Math.abs(A.x - B.x);
       var dy = Math.abs(A.y - B.y);
-      //Определяем - мы скорее идем по горизонтали или по вертикали?
-      //Внутри же будет определяться направление
-      //В итоге будем иметь путь напрямик (без учета препятствий)
       if (dx > dy) {
         if (A.x < B.x) {
           straight.push({
@@ -238,7 +255,6 @@ angular.module('aiPathFinder')
           	y: A.y
           });
           for (var xx = A.x; xx <= B.x; xx += 0.01) {
-            //Point temp = new Point((ushort)Math.Round(xx), (ushort)Math.Round(k * xx + b));
             var temp = {
               x: Math.round(xx),
               y: Math.round(k * xx + b)
@@ -254,7 +270,6 @@ angular.module('aiPathFinder')
             y: A.y
           });
           for (var xx = A.x; xx >= B.x; xx -= 0.01) {
-            //Point temp = new Point((ushort)Math.Round(xx), (ushort)Math.Round(k * xx + b));
             var temp = {
               x: Math.round(xx),
               y: Math.round(k * xx + b)
@@ -272,7 +287,6 @@ angular.module('aiPathFinder')
             y: A.y
           });
           for (var yy = A.y; yy <= B.y; yy += 0.01) {
-            //Point temp = new Point((ushort)Math.Round((yy - b) / k), (ushort)Math.Round(yy));
             var temp = {
               x: Math.round((yy - b) / k),
               y: Math.round(yy)
@@ -288,7 +302,6 @@ angular.module('aiPathFinder')
             y: A.y
           });
           for (var yy = A.y; yy >= B.y; yy -= 0.01) {
-            //Point temp = new Point((ushort)Math.Round((yy - b) / k), (ushort)Math.Round(yy));
             var temp = {
               x: Math.round((yy - b) / k),
               y: Math.round(yy)
@@ -298,22 +311,15 @@ angular.module('aiPathFinder')
             }
           }
         }
-        /*В некоторых случаях диагональные переходы все же могут появляться.
-        * Чтобы избавиться от них, нужно после формирования списка точек проверять всех соседей
-        * на изменение координат. Меняются обе ---> диагональ ---> нужно добавить еще одну точку между ними. */
       }
       for (var i = 0; i < straight.length - 1; i++) {
         if (straight[i].x != straight[i + 1].x && straight[i].y != straight[i + 1].y) {
-          //straight.Insert(i + 1, new Point(straight[i].x, straight[i + 1].y));
           straight.splice(i + 1, 0, {x: straight[i].x, y: straight[i + 1].y});
         }
       }
     };
 
-		var PWD = function() {//Первоначальное вычисление P, W, D
-      //W = new Point(0, 0);
-      //P = new Point(0, 0);
-      //D = new Point(0, 0);
+		var PWD = function() {
       W = {
         x: 0,
         y: 0
@@ -326,10 +332,7 @@ angular.module('aiPathFinder')
         x: 0,
         y: 0
       };
-      //ushort i;
-      
       var i = 0;
-      //Находим точки P и W
       for (var i = 0; i < straight.length - 1; i++) {
       	if ($scope.playfield[straight[i + 1].x][straight[i + 1].y] == 1) {
             P = straight[i];
@@ -337,7 +340,6 @@ angular.module('aiPathFinder')
             break;
         }
       }
-      //Находим точку D
       for (var i = (straight.length - 1); i > 0; i--) {
         if ($scope.playfield[straight[i - 1].x][straight[i - 1].y] == 1) {
           D = straight[i];
@@ -346,7 +348,7 @@ angular.module('aiPathFinder')
       }
     };
 
-    var LeftCoors = function() { //Точки 1 и 2 для правила левой руки
+    var LeftCoors = function() {
       var x1 = W.x - W.y + P.y;
       var x2 = P.x - W.y + P.y;
       var y1 = W.y - P.x + W.x;
@@ -359,7 +361,7 @@ angular.module('aiPathFinder')
       }
     };
 
-    var RightCoors = function() {//Точки 1 и 2 для правила правой руки
+    var RightCoors = function() {
       var x1 = W.x + W.y - P.y;
       var x2 = P.x + W.y - P.y;
       var y1 = W.y + P.x - W.x;
@@ -374,9 +376,7 @@ angular.module('aiPathFinder')
 
   	var findWay = function(left) {
 			var myway = []
-      //myway = new List<Point>();
       var i = 0;
-      //Point old_w, old_p;
       var old_w = {
       	x: null,
       	y: null
@@ -386,13 +386,12 @@ angular.module('aiPathFinder')
       	y: null
       };
       PWD();
-      //Идем от стартовой точки к P/W
       if (A.x == P.x && A.y == P.y) {
         myway.push(P);
       }
       else {
         for (i = 0; i < straight.length; i++) {
-          if (straight[i].x != W.x || straight[i].y != W.y) {//Эта точка еще не W, она принадлежит прямому пути
+          if (straight[i].x != W.x || straight[i].y != W.y) {
               myway.push(straight[i]);
           }
           if (straight[i].x == W.x && straight[i].y != W.y) {
@@ -400,7 +399,6 @@ angular.module('aiPathFinder')
           }
         }
       }
-      //Идем к точке D
       var iterations = 0;
       var flag = true;
       var deleted = {
@@ -408,7 +406,6 @@ angular.module('aiPathFinder')
         y: 0
       };
       do {
-        //Определяем, куда пойдем
         var x1 = 0;
         var x2 = 0;
         var y1 = 0;
@@ -457,26 +454,23 @@ angular.module('aiPathFinder')
             myway.push(P);
           }
         }
-        if (P.x == D.x && P.y == D.y) {//Останов
+        if (P.x == D.x && P.y == D.y) {
           flag = false;
           break;
         }
         if (P.x == B.x && P.y == B.y) {
           myway.push(P);
           flag = false;
-          return EndOfFind(myway); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          return EndOfFind(myway);
         }
-        //if (!AreNeighs(myway[myway.Count - 1], myway[myway.Count - 2]) && AreNeighs(myway[myway.Count - 1], deleted))
-            //myway[myway.Count - 2] = deleted;
-        //Если мы дошли до прямого пути, то может быть, мы сейчас получим зацикливание? Идем по прямому пути
         if (contains(straight, P)) {
           for (i = 0; i < straight.length; i++) {
             if (straight[i].x == P.x && straight[i].y == P.y) {
               break;
             }
-          } //Идем по прямому пути до точки P
-          i++; //Переходим к следующей точке пути
-          for (; i < straight.length; i++) {//Идем от нее по прямому пути до ближайшей преграды
+          }
+          i++;
+          for (; i < straight.length; i++) {
             if ($scope.playfield[straight[i].x][straight[i].y] != 1) {
               myway.push(straight[i]);
             }
@@ -487,14 +481,8 @@ angular.module('aiPathFinder')
           if (myway[myway.length - 1].x == B.x && myway[myway.length - 1].y == B.y) {
             myway.push(B);
             flag = false;
-            return EndOfFind(myway); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            return EndOfFind(myway);
           }
-          
-          /*Еще одна фича против зацикливания
-           * Используется в том случае, если уже один раз мы по циклу пробежались.
-           * Вот тогда-то программа и понимает, что что-то тут не так и в 3й раз по тому же пути мы не пойдем
-           */
-
           var p_count = 0;
           var old_p_count = 0;
           for (var j = 0; j < myway.length; j++) {
@@ -507,11 +495,9 @@ angular.module('aiPathFinder')
           }
           if (p_count > 2 && old_p_count > 1) {
             deleted = myway[myway.length - 1];
-            //myway.RemoveAt(myway.length - 1);
             myway.splice(myway.length - 1, 1);
           }
           else {
-            //Если же все путем, то мы цивилизованно уткнулись в преграду. Теперь пересчитываем P и W
             i--;
             if ((straight[i].x != old_p.x || straight[i].y != old_p.y) && (straight[i + 1].x != old_w.x || straight[i + 1].y != old_w.y)) {
               P = straight[i];
@@ -526,7 +512,6 @@ angular.module('aiPathFinder')
               }
             }
           }
-            
         }
         iterations++;
         if (iterations > 500) {
@@ -535,7 +520,7 @@ angular.module('aiPathFinder')
         }
       } while (flag);
 
-      for (; i < straight.length; i++) {//Идем от D до целевой точки
+      for (; i < straight.length; i++) {
         if (straight[i].x == D.x || straight[i].y == D.y) {
           break;
         }
@@ -546,13 +531,9 @@ angular.module('aiPathFinder')
         }
       }
       return EndOfFind(myway);
-      //return {length: myway.length, way: myway};
-      //EndOfFind:
-      //CutDublicates(ref myway); //Удаляем дубликаты
-      //Reduce(ref myway);
   	};
 
-    var AreNeighs = function(one, two) {//Являются ли 2 точки соседями (но не одной и той же!) 
+    var AreNeighs = function(one, two) { 
       if (!(one.x == two.x && one.y == two.y) &&
            ((one.x == two.x && (Math.abs(one.y - two.y) == 1)) || (one.y == two.y && (Math.abs(one.x - two.x) == 1)) || (Math.abs(one.x - two.x) == 1 && Math.abs(one.y - two.y) == 1))
          ) {
@@ -563,7 +544,7 @@ angular.module('aiPathFinder')
       }
     };
 
-    var CutDublicates = function(myway) {//Удаление повторяющихся точек
+    var CutDublicates = function(myway) {
       for (var i = 0; i < myway.length - 2; i++) {
         for (var j = (i + 2); j < myway.length; j++) {
           if (AreNeighs(myway[i], myway[j]) == true) {
@@ -581,8 +562,7 @@ angular.module('aiPathFinder')
       return Reduce(myway);
     };
 
-    var Reduce = function(myway) {//Отсечение лишних поворотов
-      //StartReduce:
+    var Reduce = function(myway) {
       for (var i = 0; i < myway.length - 2; i++) {
         for (var j = (i + 2); j < myway.length; j++) {
           if (AreNeighs(myway[i], myway[j])) {
@@ -590,10 +570,8 @@ angular.module('aiPathFinder')
           }
         }
       }
-
       for (var i = 0; i < myway.length - 2; i++) {
         if (IsAngle(myway[i], myway[i + 1], myway[i + 2])) {
-          //var temp = new Point((ushort)((myway[i].x + myway[i + 2].x) / 2), (ushort)((myway[i].y + myway[i + 2].y) / 2));
           var temp = {
             x: ((myway[i].x + myway[i + 2].x) / 2),
             y: ((myway[i].y + myway[i + 2].y) / 2)
@@ -601,14 +579,13 @@ angular.module('aiPathFinder')
           if ($scope.playfield[temp.x][temp.y] != 1) {
             myway[i + 1] = temp;
             Reduce(myway);
-            //goto StartReduce;
           }   
         }
       }
       return myway;
     };
 
-    var IsAngle = function(one, two, three) {//Образуют ли 3 точки угол
+    var IsAngle = function(one, two, three) {
       if( (Math.abs(one.x - two.x) == 1 && Math.abs(one.y - two.y) == 1) &&
           (Math.abs(three.x - two.x) == 1 && Math.abs(three.y - two.y) == 1) &&
           ((one.x == three.x && (Math.abs(one.y - three.y) == 2)) || (one.y == three.y && (Math.abs(one.x - three.x) == 2)))
@@ -769,7 +746,6 @@ angular.module('aiPathFinder')
         alert("Way insn't exists!!!");
         return;
       }
-      //var b = 7;
       var bufWay = [];
       for(var i = 0; i < result.way.length; i++) {
         bufWay.push({
@@ -838,12 +814,10 @@ angular.module('aiPathFinder')
       PWD();
       var resultLeft = findWay(true);
       var result;
-
-       $scope.comparsionData = {
-          left: resultLeft.length,
-          right: resultRight.length
-       }
-
+      $scope.comparsionData = {
+        left: resultLeft.length,
+        right: resultRight.length
+      }
       if(resultLeft == 0) {
         alert("Way insn't exists!!!");
         return;
@@ -852,8 +826,6 @@ angular.module('aiPathFinder')
         alert("Way insn't exists!!!");
         return;
       }
-
-
       if(resultLeft.length < resultRight.length) {
         $scope.wayLength = resultLeft.length;
         $scope.options.selectedAlgorithm = "Left hand";
@@ -875,7 +847,6 @@ angular.module('aiPathFinder')
         result.way.reverse();
       }
 
-      
       var bufWay = [];
       for(var i = 0; i < result.way.length; i++) {
         bufWay.push({
@@ -911,23 +882,12 @@ angular.module('aiPathFinder')
     };
 
     $scope.clearBoard = function() {
+      isStartExist = false;
+      isFinishExists = false;
       $scope.isAlgorithm = false;
       $scope.isClearBoard = true;
       isStartExist = false;
       isFinishExists = false;
       $scope.setSize($scope.options.selectedSize);
     };
-  });
-
-
-//0 - empty, 1-wall, 2-start, 3-finish
-
-/*
-1, 1, 1, 1, 1, 1, 1
-1, 0, 0, 0, 0, 2, 1
-1, 0, 0, 1, 0, 0, 1
-1, 0, 1, 1, 0, 0, 1
-1, 3, 0, 0, 0, 0, 1
-1, 0, 0, 0, 0, 0, 1
-1, 1, 1, 1, 1, 1, 1
-*/
+  }]);

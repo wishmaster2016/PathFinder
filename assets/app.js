@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('aiPathFinder', ['ngRoute', 'tjsModelViewer'])
+angular.module('aiPathFinder', ['ngRoute', 'ngAnimate', 'toaster', 'tjsModelViewer'])
 	.config(function ($routeProvider) {
 		$routeProvider
 			.when('/', {

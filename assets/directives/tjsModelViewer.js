@@ -76,7 +76,6 @@ angular.module("tjsModelViewer", [])
 				scope.$watch("realSize", function(newValue, oldValue) {
 					if(!isFirst) {
 		      	container.removeChild( renderer.domElement );
-		      	//container.remove();
 		      }
 					container = undefined;
 		      camera = undefined;
@@ -230,7 +229,6 @@ angular.module("tjsModelViewer", [])
 	              mesh.rotation.y = 2 * Math.PI;
 	              mesh.scale.set(5, 5, 5);
 	              mesh.position.copy( intersect.point ).add( intersect.face.normal );
-	              //mesh.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
 	              if(!scope.isEven) {
 	          			mesh.position.divideScalar( 25 ).floor().multiplyScalar( 25 ).addScalar( 25 ).divideScalar( 50 ).floor().multiplyScalar( 50 );
 	          			mesh.position.y += 25;
@@ -265,7 +263,6 @@ angular.module("tjsModelViewer", [])
 	            }
 	            var voxel = new THREE.Mesh( cubeGeo, cubeMaterial );
 	            voxel.position.copy( intersect.point ).add( intersect.face.normal );
-	            //voxel.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
 	            if(!scope.isEven) {
 	          		voxel.position.divideScalar( 25 ).floor().multiplyScalar( 25 ).addScalar( 25 ).divideScalar( 50 ).floor().multiplyScalar( 50 );
 	          		voxel.position.y += 25;
@@ -299,7 +296,6 @@ angular.module("tjsModelViewer", [])
 	            }
 	            var voxel = new THREE.Mesh( finishGeo, finishMaterial );
 	            voxel.position.copy( intersect.point ).add( intersect.face.normal );
-	            //voxel.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
 	            if(!scope.isEven) {
 	          		voxel.position.divideScalar( 25 ).floor().multiplyScalar( 25 ).addScalar( 25 ).divideScalar( 50 ).floor().multiplyScalar( 50 );
 	          		voxel.position.y = 0;
